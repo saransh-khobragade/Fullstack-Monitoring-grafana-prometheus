@@ -60,6 +60,42 @@ Supported services: `frontend backend postgres pgadmin prometheus grafana loki p
 
 Grafana is pre‑provisioned with datasources and a PostgreSQL dashboard.
 
+### Observability architecture
+
+```text
+Client
+  |
+  v
+Frontend (http 3000)
+  |
+  | HTTP
+  v
+Backend (http 8080)
+  |\
+  | \__ DB conn
+  |     v
+  |   Postgres (5432)
+  |       ^
+  |       |
+  |     pgAdmin (http 5050)
+  |
+  | OTLP 4318/4317
+  v
+OTel Collector
+  |  \
+  |   \__ Metrics endpoint /metrics (8889)  --> scraped by Prometheus (9090)
+  |                                          \
+  |                                           \__ Grafana (http 3001) queries Prometheus
+  |
+  \__ Traces --> Tempo (3200)  --> Grafana (Traces Explore)
+
+Docker container logs --> Promtail --> Loki (3100) --> Grafana (Logs Explore)
+
+Profiles (from Backend) --> Pyroscope (4040) --> Grafana (Profiles)
+
+Prometheus also scrapes Postgres Exporter (9187) --> Postgres
+```
+
 ### PostgreSQL monitoring
 
 - Postgres Exporter is enabled as `postgres-exporter`
