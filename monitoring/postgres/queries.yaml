@@ -1,0 +1,47 @@
+pg_locks_by_mode:
+  query: |
+    SELECT mode, count(*) AS count
+    FROM pg_locks
+    GROUP BY mode
+  metrics:
+    - mode:
+        usage: "LABEL"
+        description: "Lock mode"
+    - count:
+        usage: "GAUGE"
+        description: "Number of locks by mode"
+
+pg_deadlocks_total:
+  query: |
+    SELECT datname, deadlocks FROM pg_stat_database
+  metrics:
+    - datname:
+        usage: "LABEL"
+    - deadlocks:
+        usage: "COUNTER"
+        description: "Deadlocks per database"
+
+pg_bgwriter_io:
+  query: |
+    SELECT checkpoints_timed, checkpoints_req, buffers_checkpoint, buffers_clean, buffers_backend, buffers_alloc
+    FROM pg_stat_bgwriter
+  metrics:
+    - checkpoints_timed: { usage: GAUGE }
+    - checkpoints_req:   { usage: GAUGE }
+    - buffers_checkpoint:{ usage: GAUGE }
+    - buffers_clean:     { usage: GAUGE }
+    - buffers_backend:   { usage: GAUGE }
+    - buffers_alloc:     { usage: GAUGE }
+
+pg_stat_statements_timing:
+  query: |
+    SELECT d.datname, r.rolname, total_exec_time, mean_exec_time, calls
+    FROM pg_stat_statements p
+    LEFT JOIN pg_roles r ON p.userid=r.oid
+    LEFT JOIN pg_database d ON p.dbid=d.oid
+  metrics:
+    - datname:         { usage: LABEL }
+    - rolname:         { usage: LABEL }
+    - total_exec_time: { usage: GAUGE }
+    - mean_exec_time:  { usage: GAUGE }
+    - calls:           { usage: COUNTER }
